@@ -16,11 +16,21 @@ import (
 	pg_query "github.com/pganalyze/pg_query_go/v6"
 )
 
-// Tool is the runner name stamped on every diagnostic, matching the yze-sql family.
-const Tool = "yze-sql"
+// Name is the analyzer's stable identifier — the suffix of its flat rule id and
+// the key the yze suite catalogs it under.
+const Name = "keywordcase"
 
-// Rule is the stable rule id every diagnostic carries.
-const Rule = "yze-sql/keywordcase"
+// Tool is the suite name stamped on every diagnostic. The analyzer is bundled into
+// the yze suite (the language group lives in the repo path and [Category], not the
+// rule id), so it reports as "yze", not a separate "yze-sql" tool.
+const Tool = "yze"
+
+// Rule is the stable, flat rule id every diagnostic carries: "yze/" + [Name].
+const Rule = Tool + "/" + Name
+
+// Category is the language group this analyzer belongs to, used by the yze suite to
+// run it only when processing SQL.
+const Category = "sql"
 
 // message formats a non-lowercase-keyword finding (actual then canonical lowercase).
 const message = "SQL keyword %q should be lowercase %q"

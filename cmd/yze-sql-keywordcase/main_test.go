@@ -34,7 +34,7 @@ func TestRunEmitsReportForDirectory(t *testing.T) {
 	buf := swapStdout(t)
 
 	require.Equal(t, 0, run([]string{dir}))
-	assert.Contains(t, buf.String(), "yze-sql/keywordcase")
+	assert.Contains(t, buf.String(), "yze/keywordcase")
 	assert.Contains(t, buf.String(), "lowercase")
 }
 

@@ -16,7 +16,7 @@ func TestDiagnosticsFlagsUppercaseKeywords(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Len(t, diags, 3)
-	assert.Equal(t, "yze-sql/keywordcase", diags[0].Rule)
+	assert.Equal(t, "yze/keywordcase", diags[0].Rule)
 	assert.Equal(t, "schema.sql", diags[0].Path)
 	assert.Equal(t, 1, diags[0].Line)
 	assert.Equal(t, 1, diags[0].Col)
