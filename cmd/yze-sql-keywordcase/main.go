@@ -1,6 +1,6 @@
-// Command yze-sql-keywordcase reports lowercase PostgreSQL keywords in the given
-// .sql files and directories, emitting the lean stickler-json report the stickler
-// runner consumes.
+// Command yze-sql-keywordcase reports PostgreSQL keywords that are not written in
+// lowercase in the given .sql files and directories, emitting the lean
+// stickler-json report the stickler runner consumes.
 package main
 
 import (

@@ -1,0 +1,72 @@
+# Quality budget for yze-sql-keywordcase. Planner, implementer, and reviewer
+# optimize against this. The capability is a published yze-sql family static
+# analyzer that runs as a declarative stickler runner, so it gates other repos'
+# CI — correctness and reliability are load-bearing for the whole toolchain.
+version: "2.0.0"
+active-spec: keyword-case-analyzer
+
+# Production tier: this linter's output is a gate other teams cannot override. A
+# false positive blocks an innocent build; a false negative lets the lowercase
+# standard rot; a panic on malformed SQL takes down every consumer's pipeline.
+tier: production
+threshold: 90
+
+# Seven-dimension scoring weights the reviewer scores against.
+dimensions:
+  correctness: 30
+  maintainability: 20
+  reliability: 15
+  testability: 15
+  simplicity: 10
+  observability: 5
+  security: 5
+
+language: go
+runtime:
+  toolchain: "1.26"               # go.mod minor floor; CI floats the patch (check-latest)
+  module: github.com/sqlrest/yze-sql-keywordcase
+  binary: yze-sql-keywordcase     # cmd/yze-sql-keywordcase; a stickler declarative runner
+  cgo: true                       # via gomatic/go-sql -> pg_query_go (libpg_query)
+
+# The contracts the implementation must hold and the tests must pin.
+contract:
+  direction: >
+    Flags PostgreSQL keyword tokens whose text is NOT already lowercase
+    (lowercase is the org standard; uppercase and title-case are the error).
+    Lowercase keywords, quoted identifiers ("SELECT"), and keyword text inside
+    string literals ('SELECT') are never flagged.
+  position:
+    line: "1-based, incremented on '\\n'"
+    column: >
+      1-based BYTE column (go/token.Position.Column convention) — this is what
+      go-yze and the stickler consumer use, so every yze analyzer reports the same
+      column for the same byte. Multi-byte runes advance the column by their byte
+      width.
+  errors: "a lexical scan failure is returned wrapped in go-sql's ErrScan; never panics on any input"
+
+gate:
+  # `make check` must exit zero before any change is complete.
+  command: make check
+  must: pass
+  steps:
+    lint:
+      must: "0 issues"            # govet enable-all, gocognit<=7, gocyclo<=12, revive, staticcheck
+    vulncheck:
+      command: govulncheck ./...
+      must: clean
+    coverage:
+      threshold: "100.0%"         # total statement coverage of every package, measured
+      must: "== threshold"
+      note: "100% is the floor, not the goal — every covered branch asserts the contract, not just executes"
+    fuzz:
+      target: FuzzDiagnostics
+      must: "seeded; never panics; only returns nil or errors.Is(sql.ErrScan)"
+    release:
+      command: goreleaser check
+      must: valid
+
+style:
+  errors: "constant sentinels via gomatic/go-error, matched with errors.Is; no fmt.Errorf except %w-wrapping a sentinel"
+  parameters: "named domain types where a name adds clarity; bare primitives only at the libpg_query boundary"
+  visibility: "private by default; export only the Diagnostics/Report library surface the runner needs"
+  receivers: "value receivers; the position cursor is an immutable value advanced forward over the source once (O(n))"
