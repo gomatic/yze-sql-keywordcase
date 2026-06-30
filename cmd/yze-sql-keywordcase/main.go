@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	keywordcase "github.com/sqlrest/yze-sql-keywordcase"
+	keywordcase "github.com/gomatic/yze-sql-keywordcase"
 )
 
 // Injected collaborators, so the command is testable without real I/O.

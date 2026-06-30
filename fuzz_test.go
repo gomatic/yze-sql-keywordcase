@@ -9,7 +9,7 @@ import (
 	sql "github.com/gomatic/go-sql"
 	goyze "github.com/gomatic/go-yze"
 
-	keywordcase "github.com/sqlrest/yze-sql-keywordcase"
+	keywordcase "github.com/gomatic/yze-sql-keywordcase"
 )
 
 // FuzzDiagnostics drives arbitrary text into the libpg_query (cgo) scanner. The

@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	keywordcase "github.com/sqlrest/yze-sql-keywordcase"
+	keywordcase "github.com/gomatic/yze-sql-keywordcase"
 )
 
 func TestDiagnosticsFlagsUppercaseKeywords(t *testing.T) {
