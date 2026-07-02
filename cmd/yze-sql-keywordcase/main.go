@@ -57,7 +57,7 @@ func sqlFiles(args []string) ([]string, error) {
 		case err != nil:
 			return nil, err
 		case info.IsDir():
-			found, walkErr := sqlFilesUnder(arg)
+			found, walkErr := sqlFilesUnder(dirParam(arg))
 			if walkErr != nil {
 				return nil, walkErr
 			}
@@ -69,10 +69,13 @@ func sqlFiles(args []string) ([]string, error) {
 	return files, nil
 }
 
+// dirParam names the dir parameter of sqlFilesUnder; rename it to the real domain concept.
+type dirParam string
+
 // sqlFilesUnder walks dir collecting every *.sql file.
-func sqlFilesUnder(dir string) ([]string, error) {
+func sqlFilesUnder(dir dirParam) ([]string, error) {
 	var files []string
-	err := walkDir(dir, func(path string, d fs.DirEntry, err error) error {
+	err := walkDir(string(dir), func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
