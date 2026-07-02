@@ -57,7 +57,7 @@ func sqlFiles(args []string) ([]string, error) {
 		case err != nil:
 			return nil, err
 		case info.IsDir():
-			found, walkErr := sqlFilesUnder(dirParam(arg))
+			found, walkErr := sqlFilesUnder(searchDir(arg))
 			if walkErr != nil {
 				return nil, walkErr
 			}
@@ -69,11 +69,11 @@ func sqlFiles(args []string) ([]string, error) {
 	return files, nil
 }
 
-// dirParam names the dir parameter of sqlFilesUnder; rename it to the real domain concept.
-type dirParam string
+// searchDir is a directory argument expanded recursively to the *.sql files it contains.
+type searchDir string
 
 // sqlFilesUnder walks dir collecting every *.sql file.
-func sqlFilesUnder(dir dirParam) ([]string, error) {
+func sqlFilesUnder(dir searchDir) ([]string, error) {
 	var files []string
 	err := walkDir(string(dir), func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
