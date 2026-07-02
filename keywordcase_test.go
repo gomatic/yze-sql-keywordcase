@@ -95,7 +95,7 @@ func TestDiagnosticsIgnoresKeywordInsideStringLiteral(t *testing.T) {
 }
 
 func TestDiagnosticsEmptyAndTrivialSourcesAreClean(t *testing.T) {
-	for _, source := range []string{"", "   ", "\n\n", ";"} {
+	for _, source := range []sql.SQL{"", "   ", "\n\n", ";"} {
 		diags, err := keywordcase.Diagnostics("schema.sql", source)
 		require.NoError(t, err, "source %q", source)
 		assert.Empty(t, diags, "source %q", source)

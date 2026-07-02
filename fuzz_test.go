@@ -38,7 +38,7 @@ func FuzzDiagnostics(f *testing.F) {
 	}
 
 	f.Fuzz(func(t *testing.T, source string) {
-		diags, err := keywordcase.Diagnostics("fuzz.sql", source)
+		diags, err := keywordcase.Diagnostics("fuzz.sql", sql.SQL(source))
 		if err != nil {
 			if !errors.Is(err, sql.ErrScan) {
 				t.Fatalf("error not wrapping sql.ErrScan: %v", err)
@@ -50,7 +50,7 @@ func FuzzDiagnostics(f *testing.F) {
 		}
 
 		// Determinism: the same source must always yield the same diagnostics.
-		again, _ := keywordcase.Diagnostics("fuzz.sql", source)
+		again, _ := keywordcase.Diagnostics("fuzz.sql", sql.SQL(source))
 		if !reflect.DeepEqual(diags, again) {
 			t.Fatalf("non-deterministic diagnostics for %q", source)
 		}

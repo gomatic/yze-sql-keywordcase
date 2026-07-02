@@ -35,13 +35,16 @@ const Category = "sql"
 // message formats a non-lowercase-keyword finding (actual then canonical lowercase).
 const message = "SQL keyword %q should be lowercase %q"
 
+// Path is the file path stamped on each diagnostic's location.
+type Path string
+
 // Diagnostics reports every keyword token in source whose text is not its canonical
 // lowercase spelling. A lexical error scanning source is returned (wrapped in
 // sql.ErrScan) so the caller can surface it as a tool failure rather than a clean
 // pass. path is stamped on each diagnostic's location. Positions are computed in a
 // single forward pass over source, so a file of any size costs O(n).
-func Diagnostics(path, source string) ([]goyze.Diagnostic, error) {
-	result, err := sql.Scan(sql.SQL(source))
+func Diagnostics(path Path, source sql.SQL) ([]goyze.Diagnostic, error) {
+	result, err := sql.Scan(source)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +82,7 @@ func start() cursor {
 // keeps the byte index in range: if a token offset ever landed past
 // end-of-source, indexing source would panic, so the bound stops at EOF instead.
 // target is never behind the cursor because tokens arrive in ascending order.
-func (c cursor) advance(source string, target int) cursor {
+func (c cursor) advance(source sql.SQL, target int) cursor {
 	for c.offset < target && c.offset < len(source) {
 		if source[c.offset] == '\n' {
 			c.line, c.col = c.line+1, 1
@@ -93,11 +96,11 @@ func (c cursor) advance(source string, target int) cursor {
 
 // keywordDiagnostic returns a diagnostic when token is a keyword whose text is not
 // lowercase (uppercase or title-case), located at at, and ok=false otherwise.
-func keywordDiagnostic(path, source string, token *pg_query.ScanToken, at cursor) (goyze.Diagnostic, bool) {
+func keywordDiagnostic(path Path, source sql.SQL, token *pg_query.ScanToken, at cursor) (goyze.Diagnostic, bool) {
 	if token.KeywordKind == pg_query.KeywordKind_NO_KEYWORD {
 		return goyze.Diagnostic{}, false
 	}
-	word := source[token.Start:token.End]
+	word := string(source[token.Start:token.End])
 	lower := strings.ToLower(word)
 	if word == lower {
 		return goyze.Diagnostic{}, false
@@ -105,7 +108,7 @@ func keywordDiagnostic(path, source string, token *pg_query.ScanToken, at cursor
 	return goyze.Diagnostic{
 		Tool:     Tool,
 		Rule:     Rule,
-		Path:     path,
+		Path:     string(path),
 		Line:     at.line,
 		Col:      at.col,
 		Severity: goyze.SeverityError,

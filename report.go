@@ -2,6 +2,7 @@ package keywordcase
 
 import (
 	errs "github.com/gomatic/go-error"
+	sql "github.com/gomatic/go-sql"
 	goyze "github.com/gomatic/go-yze"
 )
 
@@ -22,7 +23,7 @@ func Report(read FileReader, files []string) (goyze.Report, error) {
 		if err != nil {
 			return goyze.Report{}, ErrReadFile.With(err, "path", file)
 		}
-		diags, scanErr := Diagnostics(file, string(data))
+		diags, scanErr := Diagnostics(Path(file), sql.SQL(data))
 		if scanErr != nil {
 			return goyze.Report{}, scanErr
 		}
