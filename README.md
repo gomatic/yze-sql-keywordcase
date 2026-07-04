@@ -3,4 +3,4 @@
 [![go](https://github.com/gomatic/yze-sql-keywordcase/actions/workflows/go.yml/badge.svg)](https://github.com/gomatic/yze-sql-keywordcase/actions/workflows/go.yml)
 [![release](https://github.com/gomatic/yze-sql-keywordcase/actions/workflows/release.yml/badge.svg)](https://github.com/gomatic/yze-sql-keywordcase/actions/workflows/release.yml)
 
-[docs](https://gomatic.github.io/docs.yze-sql-keywordcase/)
+[docs](https://gomatic.github.io/docs.yze/)
