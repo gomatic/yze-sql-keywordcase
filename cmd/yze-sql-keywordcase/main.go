@@ -19,6 +19,7 @@ import (
 var (
 	osExit             = os.Exit
 	readFile           = os.ReadFile
+	statPath           = os.Stat
 	walkDir            = filepath.WalkDir
 	stdout   io.Writer = os.Stdout
 )
@@ -52,7 +53,7 @@ func fail(err error) int {
 func sqlFiles(args []string) ([]string, error) {
 	var files []string
 	for _, arg := range args {
-		info, err := os.Stat(arg)
+		info, err := statPath(arg)
 		switch {
 		case err != nil:
 			return nil, err

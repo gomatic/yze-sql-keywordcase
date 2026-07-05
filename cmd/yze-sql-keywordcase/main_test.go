@@ -60,7 +60,7 @@ func TestRunFailsWhenWalkErrors(t *testing.T) {
 }
 
 func TestRunFailsWhenReadErrors(t *testing.T) {
-	file := writeSQL(t, t.TempDir(), "schema.sql", "create table t ();")
+	file := writeSQL(t, t.TempDir(), "queries.sql", "create table t ();")
 	original := readFile
 	readFile = func(string) ([]byte, error) { return nil, errors.New("read boom") }
 	t.Cleanup(func() { readFile = original })
