@@ -33,6 +33,10 @@ func FuzzDiagnostics(f *testing.F) {
 		"-- comment\nSELECT;",
 		"select 'unterminated",
 		"DO $$ BEGIN PERFORM 1; END $$;",
+		"select Version, Level, t.Name from t;",
+		"do $$ UPDATE t SET Level = 1; $$;",
+		"select $$don't SELECT$$;",
+		"select $a$select $b$select $c$select $d$SELECT $e$FROM$e$;$d$;$c$;$b$;$a$;",
 	} {
 		f.Add(seed)
 	}
