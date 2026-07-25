@@ -3,16 +3,17 @@ module github.com/gomatic/yze-sql-keywordcase
 go 1.26.4
 
 require (
-	github.com/gomatic/go-error v0.3.0
-	github.com/gomatic/go-sql v0.0.2
-	github.com/gomatic/go-yze v0.4.0
+	github.com/gomatic/go-error v0.3.8
+	github.com/gomatic/go-sql v0.1.10
+	github.com/gomatic/go-yze v0.8.10
 	github.com/pganalyze/pg_query_go/v6 v6.2.2
 	github.com/stretchr/testify v1.11.1
-	google.golang.org/protobuf v1.36.10
+	google.golang.org/protobuf v1.36.11
 )
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/mod v0.37.0 // indirect
 	golang.org/x/sync v0.21.0 // indirect
