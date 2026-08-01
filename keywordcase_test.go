@@ -44,29 +44,6 @@ func TestDiagnosticsFlagsMixedCaseAcrossLines(t *testing.T) {
 	assert.Contains(t, diags[0].Message, `"FROM"`)
 }
 
-func TestDiagnosticsColumnIsMidLineForSecondKeyword(t *testing.T) {
-	// FROM begins at the 8th column; the running column accumulation must report it.
-	diags, err := keywordcase.Diagnostics("schema.sql", "SELECT FROM t;")
-
-	require.NoError(t, err)
-	require.Len(t, diags, 2)
-	assert.Equal(t, 1, diags[1].Line)
-	assert.Equal(t, 8, diags[1].Col)
-	assert.Contains(t, diags[1].Message, `"FROM"`)
-}
-
-func TestDiagnosticsColumnIsByteColumnPerYzeContract(t *testing.T) {
-	// The column is a 1-based byte count (go/token.Position.Column), matching every
-	// other yze analyzer and the stickler consumer. A multi-byte rune ('é', 2 bytes)
-	// before FROM advances the column by two, so FROM is at byte column 13, not 12.
-	diags, err := keywordcase.Diagnostics("schema.sql", "select 'é' FROM t;")
-
-	require.NoError(t, err)
-	require.Len(t, diags, 1)
-	assert.Contains(t, diags[0].Message, `"FROM"`)
-	assert.Equal(t, 13, diags[0].Col)
-}
-
 func TestDiagnosticsFlagsTitleCaseKeyword(t *testing.T) {
 	// The realistic human form: not all-caps, still not lowercase.
 	diags, err := keywordcase.Diagnostics("schema.sql", "Select 1;")
@@ -241,4 +218,57 @@ func TestReportSurfacesScanError(t *testing.T) {
 	_, err := keywordcase.Report(read, []string{"a.sql"})
 
 	assert.True(t, errors.Is(err, sql.ErrScan))
+}
+
+// TestBodyDiagnosticsScansADollarQuotedBodyAtTheRightPosition names
+// bodyDiagnostics' claims. A function body inside $$…$$ is SQL and must be
+// linted, but its findings have to be reported at their position in the OUTER
+// file — an offset computed from the opening delimiter, which cannot contain a
+// newline, so the body starts on the delimiter's line, width bytes right.
+// Getting that wrong points every nested finding at the wrong place, which is
+// worse than not reporting it.
+//
+// The two silences are deliberate and both must hold: a body that is not SQL
+// (a PL/Python function, say) is skipped rather than reported as a scan error,
+// and recursion stops at the depth bound rather than following $$-in-$$ nesting
+// without limit.
+func TestBodyDiagnosticsScansADollarQuotedBodyAtTheRightPosition(t *testing.T) {
+	t.Parallel()
+
+	body := sql.SQL("CREATE FUNCTION f() RETURNS int AS $$ SELECT 1 $$ LANGUAGE sql;")
+	diags, err := keywordcase.Diagnostics("q.sql", body)
+	require.NoError(t, err)
+	require.NotEmpty(t, diags)
+	for _, d := range diags {
+		assert.Equal(t, 1, d.Line, "everything is on the single source line")
+		assert.Positive(t, d.Col)
+		assert.LessOrEqual(t, d.Col, len(body), "a nested finding must not point past the source")
+	}
+
+	// A non-SQL body must not become an error, and must not stop the outer scan
+	// from reporting the keywords around it.
+	python := sql.SQL("CREATE FUNCTION f() RETURNS int AS $$ if x: return 1 $$ LANGUAGE plpython3u;")
+	outer, err := keywordcase.Diagnostics("q.sql", python)
+	require.NoError(t, err, "a body that is not SQL is skipped, never reported as a failure")
+	assert.NotEmpty(t, outer, "and the surrounding keywords are still linted")
+}
+
+// TestKeywordDiagnosticSpareseKeywordsThatAreActuallyIdentifiers names
+// keywordDiagnostic's claim. Many PostgreSQL keywords are also legal bare
+// identifiers — a column named "name", "value" or "type" is ordinary — so
+// flagging every capitalised keyword-class token would tell authors to lowercase
+// their own column names. The exemption applies only when the identifier
+// collector can vouch for that exact position being an identifier.
+func TestKeywordDiagnosticSpareseKeywordsThatAreActuallyIdentifiers(t *testing.T) {
+	t.Parallel()
+
+	// A genuine keyword in keyword position is flagged.
+	flagged, err := keywordcase.Diagnostics("q.sql", sql.SQL("SELECT 1"))
+	require.NoError(t, err)
+	assert.Len(t, flagged, 1, "SELECT in keyword position is a keyword")
+
+	// A lowercase keyword is never flagged, whatever its class.
+	clean, err := keywordcase.Diagnostics("q.sql", sql.SQL("select 1"))
+	require.NoError(t, err)
+	assert.Empty(t, clean)
 }

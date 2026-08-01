@@ -32,3 +32,36 @@ func TestSequenceStopsWhenQualifiedNameIsNotDotted(t *testing.T) {
 		"the first name is marked; the missing dot stops the walk before the second")
 	assert.Empty(t, c.names)
 }
+
+// TestMatchesComparesBareIdentifiersFoldedAndQuotedOnesExactly names matches'
+// claim, which is PostgreSQL's identifier rule and not a convenience. A bare
+// identifier is folded to lowercase by the parser, so `T.Name` and `t.name` are
+// the same column; a QUOTED identifier is case-sensitive, so `"Name"` and
+// `"name"` are two different columns. Comparing quoted identifiers
+// case-insensitively would let the collector vouch for a position that is
+// actually a different column, and the analyzer would then stay silent about a
+// genuine keyword.
+func TestMatchesComparesBareIdentifiersFoldedAndQuotedOnesExactly(t *testing.T) {
+	t.Parallel()
+
+	// Bare: whatever the case, the qualified name resolves and the keyword-class
+	// token is treated as an identifier rather than flagged.
+	for _, src := range []string{
+		`SELECT t.Name FROM t`,
+		`SELECT T.NAME FROM t`,
+		`SELECT t.name FROM t`,
+	} {
+		diags, err := Diagnostics("q.sql", sql.SQL(src))
+		require.NoError(t, err, src)
+		for _, d := range diags {
+			assert.NotContains(t, d.Message, "Name", "a bare identifier folds and must not be flagged: %s", src)
+		}
+	}
+
+	// Quoted: the exact spelling is the identity, and quotes are not part of it.
+	diags, err := Diagnostics("q.sql", sql.SQL(`SELECT t."Name" FROM t`))
+	require.NoError(t, err)
+	for _, d := range diags {
+		assert.NotContains(t, d.Message, `"Name"`, "a quoted identifier is an identifier, not a keyword")
+	}
+}
