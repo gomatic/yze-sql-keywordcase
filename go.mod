@@ -3,9 +3,9 @@ module github.com/gomatic/yze-sql-keywordcase
 go 1.26.4
 
 require (
-	github.com/gomatic/go-error v0.3.13
-	github.com/gomatic/go-sql v0.1.21
-	github.com/gomatic/go-yze v0.9.5
+	github.com/gomatic/go-error v0.3.14
+	github.com/gomatic/go-sql v0.1.27
+	github.com/gomatic/go-yze v0.10.3
 	github.com/pganalyze/pg_query_go/v6 v6.2.2
 	github.com/stretchr/testify v1.11.1
 	google.golang.org/protobuf v1.36.11
